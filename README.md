@@ -36,3 +36,22 @@ https://github.com/jojoldu/spring-batch-in-action
 
 ### 번외
 - [Spring Batch Paging Reader 사용시 같은 조건의 데이터를 읽고 수정할때 문제](https://jojoldu.tistory.com/337)
+- [Spring Boot Data Jpa 프로젝트에 Querydsl 적용하기](https://jojoldu.tistory.com/372)
+- [JPA에서 대량의 데이터를 삭제할때 주의해야할 점](https://jojoldu.tistory.com/235)
+
+### 주의사항
+- [@StepScope 사용시 주의사항](https://jojoldu.tistory.com/132)
+- [ItemWriter에 List 전달하기](https://jojoldu.tistory.com/140)
+- [영속성 컨텍스트 문제(processor에서 lazyException 발생할때)](https://jojoldu.tistory.com/146)
+- [paging시 주의사항](https://jojoldu.tistory.com/166)
+
+### 테스트
+- [Spock 소개 및 튜토리얼](https://jojoldu.tistory.com/228)
+- [SpringBoot 환경에서 Spock 사용하기](https://jojoldu.tistory.com/search/%5Bbatch%5D?page=2)
+- [SpringBoot에서 Spock Mock 사용법과 문제점](https://jojoldu.tistory.com/340)
+- [SpringBatch에서 ItemReader를 Mock객체로 교체하기](https://jojoldu.tistory.com/236)
+
+### 배포
+- [1. AWS Code Deploy로 배포 Jenkins에서 배치 Jenkins로 Spring Batch 배포하기 - 기본 환경 구성](https://jojoldu.tistory.com/313)
+- [2. AWS Code Deploy로 배포 Jenkins에서 배치 Jenkins로 Spring Batch 배포하기 - Code Deploy 연동](https://jojoldu.tistory.com/314)
+- [3. AWS Code Deploy로 배포 Jenkins에서 배치 Jenkins로 Spring Batch 배포하기 - 젠킨스 연동](https://jojoldu.tistory.com/315)
