@@ -38,7 +38,7 @@ https://github.com/jojoldu/spring-batch-in-action
 - [Spring Batch Paging Reader 사용시 같은 조건의 데이터를 읽고 수정할때 문제](https://jojoldu.tistory.com/337)
 
 
-### Spring Batch 가이드 - 메타테이블엿보기
+## Spring Batch 가이드 - 메타테이블엿보기
 - JOB_INSTANCE_ID
     - BATCH_JOB_INSTANCE 테이블의 PK
 - JOB_NAME
