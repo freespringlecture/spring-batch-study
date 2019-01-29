@@ -67,3 +67,9 @@ Spring Batch는 동일한 Job Parameter로 성공한 기록이 있을때만 재�
 
 - JOB INSTANCE: 부모
 - JOB EXECUTION: 자식
+
+![image](img/2-1.png)
+
+
+### BATCH_JOB_EXECUTION_PARAM
+BATCH_JOB_EXECUTION 테이블이 생성될 당시에 입력 받은 Job Parameter를 담고 있음
