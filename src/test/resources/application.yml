@@ -1,0 +1,28 @@
+spring:
+  profiles:
+    active: local
+  jpa:
+    show-sql: true
+
+spring.batch.job.names: ${job.name:NONE}
+logging.level.org.springframework.batch: DEBUG
+---
+spring:
+  profiles: local
+  datasource:
+    hikari:
+      jdbc-url: jdbc:h2:mem:testdb;
+      username: sa
+      password:
+      driver-class-name: org.h2.Driver
+
+---
+spring:
+  profiles: mysql
+  datasource:
+    hikari:
+      jdbc-url: jdbc:mysql://localhost:3306/spring_batch
+      username: freelife
+      password: pass
+      driver-class-name: com.mysql.cj.jdbc.Driver
+

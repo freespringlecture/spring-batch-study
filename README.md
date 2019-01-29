@@ -1,81 +1,57 @@
-## Spring Batch 가이드 - ItemWriter
-8. [Spring Batch 가이드 - ItemWriter](https://jojoldu.tistory.com/339)
+## Spring Batch 가이드 - ItemProcessor
+9. [Spring Batch 가이드 - ItemProcessor](https://jojoldu.tistory.com/347)
 
-## ItemWriter 소개
-ItemWriter는 Spring Batch에서 사용하는 **출력** 기능
+이번 챕터에서 배울 내용
 
-ItemWriter는 item 하나를 작성하지 않고 **Chunk 단위로 묶인 item List**를 다룸
+* process 단계에서 처리 할 수 있는 비즈니스 로직의 종류
+* 청크 지향 처리에서 ItemProcessor 를 구성하는 방법
+* Spring Batch와 함께 제공되는 ItemProcessor 구현
 
-* ItemReader를 통해 각 항목을 개별적으로 읽고 이를 처리하기 위해 ItemProcessor에 전달  
-* 이 프로세스는 청크의 Item 개수 만큼 처리 될 때까지 계속됨
-* 청크 단위만큼 처리가 완료되면 Writer에 전달되어 Writer에 명시되어있는대로 일괄처리
+## ItemProcessor 소개
+ItemProcessor는 **Reader에서 넘겨준 데이터 개별건을 가공/처리**해줌
+ChunkSize 단위로 묶은 데이터를 한번에 처리하는 ItemWriter와는 대조됨
 
-Reader와 Processor를 거쳐 처리된 Item을 Chunk 단위 만큼 쌓은 뒤 이를 Writer에 전달
+ItemProcessor를 사용하는 방법
 
-## Database Writer
-Spring Batch는 JDBC와 ORM 모두 Writer를 제공
-Writer는 Chunk단위의 마지막 단계임
-그래서 Database의 영속성과 관련해서는 **항상 마지막에 Flush를 해줘야만** 함
+* 변환
+    * Reader에서 읽은 데이터를 원하는 타입으로 변환해서 Writer에 넘겨 줄 수 있음
+* 필터
+    * Reader에서 넘겨준 데이터를 Writer로 넘겨줄 것인지를 결정할 수 있음
+    * ```null```을 반환하면 **Writer에 전달되지 않음**
 
-Writer가 받은 모든 Item이 처리 된 후, Spring Batch는 현재 트랜잭션을 커밋
+## 기본 사용법
+ItemProcessor 인터페이스는 두 개의 제네릭 타입이 필요함
+* I
+    * ItemReader에서 받을 데이터 타입
+* O
+    * ItemWriter에 보낼 데이터 타입
 
-데이터베이스와 관련된 Writer
+Reader에서 읽은 데이터가 ItemProcessor의 ```process```를 통과해서 Writer에 전달됨
 
-* JdbcBatchItemWriter
-* HibernateItemWriter
-* JpaItemWriter
+## 변환
+Reader에서 읽은 타입을 변환하여 Writer에 전달해주는 것
 
-## JdbcBatchItemWriter
-ORM을 사용하지 않는 경우 Writer는 대부분 JdbcBatchItemWriter를 사용
-JdbcBatchItemWriter는 **JDBC의 Batch 기능을 사용하여 한번에 Database로 전달하여 Database 내부에서 쿼리들이 실행**되도록 함
+## 필터
+**Writer에 값을 넘길지 말지를 Processor에서 판단하는 것**
 
-* 업데이트를 일괄 처리로 그룹화하면 데이터베이스와 어플리케이션간 왕복 횟수가 줄어들어 성능이 향상 됨
+## 트랜잭션 범위
+Spring Batch에서 **트랜잭션 범위는 Chunk단위**
+Reader에서 Entity를 반환해주었다면 **Entity간의 Lazy Loading이 가능**
+rocessor뿐만 아니라 Writer에서도 가능
 
-JdbcBatchItemWriterBuilder 설정값
+### Processor
+**Processor는 트랜잭션 범위 안이며, Entity의 Lazy Loading이 가능**
 
-|  Property     |  Parameter Type     |  설명   |
-|  ---                          |  ---                              |  ---  |
-| assertUpdates                 | boolean |  적어도 하나의 항목이 행을 업데이트하거나 삭제하지 않을 경우 예외를 throw할지 여부를 설정, 기본값은 ```true```, Exception:```EmptyResultDataAccessException```     | 
-| columnMapped        | 없음 | Key,Value 기반으로 Insert SQL의 Values를 매핑 (ex: ```Map<String, Object>```)      |
-| beanMapped        | 없음  | Pojo 기반으로 Insert SQL의 Values를 매핑      |
+### Writer
+Processor와 Writer는 트랜잭션 범위 안이며, Lazy Loading이 가능
 
-```JdbcBatchItemWriter```의 설정에서 주의
+## ItemProcessor 구현체
+Spring Batch에서 자주 사용하는 용도의 Processor 클래스
 
-* JdbcBatchItemWriter의 제네릭 타입은 **Reader에서 넘겨주는 값의 타입**
+* ItemProcessorAdapter
+* ValidatingItemProcessor
+* CompositeItemProcessor
 
-## JpaItemWriter
-ORM을 사용할 수 있는 ```JpaItemWriter```
-Writer에 전달하는 데이터가 Entity 클래스라면 JpaItemWriter를 사용
+ItemProcessorAdapter, ValidatingItemProcessor는 거의 사용하지 않음
 
-JpaItemWriter는 JPA를 사용하기 때문에 영속성 관리를 위해 EntityManager를 할당해줘야 함  
-
-> 일반적으로 ```spring-boot-starter-data-jpa```를 의존성에 등록하면 Entity Manager가 Bean으로 자동생성되어 DI 코드만 추가하면 됨
-
-대신 **필수로 설정해야할 값이 EntityManager뿐**임
-
-JdbcBatchItemWriter와 다른것이 있다면 processor가 추가 됨  
-이유는 Pay Entity를 읽어서 Writer에는 Pay2 Entity를 전달해주기 위함  
-
-> Reader에서 읽은 데이터를 가공해야할 때 Processor가 필요함  
-
-JpaItemWriter는 JdbcBatchItemWriter와 달리 **넘어온 Entity를 데이터베이스에 반영**함
-JpaItemWriter는 **Entity 클래스를 제네릭 타입으로 받아야만 함**
-
-## Custom ItemWriter
-Reader와 달리 Writer의 경우 Custom하게 구현해야할 일이 많음
-
-* Reader에서 읽어온 데이터를 RestTemplate으로 외부 API로 전달해야할때
-* 임시저장을 하고 비교하기 위해 싱글톤 객체에 값을 넣어야할때
-* 여러 Entity를 동시에 save 해야할때
-
-등등 여러 상황이 있음
-
-Spring Batch에서 공식적으로 지원하지 않는 Writer를 사용하고 싶을때 **ItemWriter인터페이스를 구현**하면 됨
-
-```write()```만 ```@Override``` 하시면 구현체 생성은 끝남
-
-## 주의 사항
-ItemWriter를 사용할 때 **Processor에서 Writer에 List를 전달**하고 싶을때가 있음
-이때 ItemWriter의 제네릭을 List로 선언해서는 문제를 해결할 수 없음
-
-[Writer에 List형 Item을 전달하고 싶을때](https://jojoldu.tistory.com/140)
+CompositeItemProcessor는 **ItemProcessor간의 체이닝을 지원**하는 Processor
