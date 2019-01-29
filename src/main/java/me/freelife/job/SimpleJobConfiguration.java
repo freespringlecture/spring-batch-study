@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SimpleJobConfiguration {
     private final JobBuilderFactory jobBuilderFactory; // 생성자 DI 받음
-    private final StepBuilderFactory stepBuilderFactory; // 생성자 DI 받
+    private final StepBuilderFactory stepBuilderFactory; // 생성자 DI 받음
 
     @Bean
     public Job simple() {
