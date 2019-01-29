@@ -12,6 +12,9 @@
 - Java 11
 - Gradle
 
+### 수업 GitHub 주소
+https://github.com/jojoldu/spring-batch-in-action
+
 ### 수업 커리큘럼
 1. [Spring Batch 가이드 - 배치 어플리케이션이란?](https://jojoldu.tistory.com/324)
 
