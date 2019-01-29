@@ -24,7 +24,8 @@ public class SimpleJobConfiguration {
                 .build();
     }
 
-    private Step simpleStep1() {
+    @Bean
+    public Step simpleStep1() {
         return stepBuilderFactory.get("simpleStep1")
                 .tasklet((contribution, chunkContext) -> {
                     log.info(">>>>> This is Step1");
