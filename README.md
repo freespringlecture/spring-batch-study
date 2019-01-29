@@ -1,105 +1,81 @@
-## Spring Batch 가이드 - ItemReader
-7. [Spring Batch 가이드 - ItemReader](https://jojoldu.tistory.com/336)
+## Spring Batch 가이드 - ItemWriter
+8. [Spring Batch 가이드 - ItemWriter](https://jojoldu.tistory.com/339)
 
-### ItemReader 소개
-Spring Batch의 ItemReader는 **데이터를 읽어들임**
-**Spring Batch에서 지원하지 않는 Reader가 필요할 경우 직접 해당 Reader를 만들수도 있음**
+## ItemWriter 소개
+ItemWriter는 Spring Batch에서 사용하는 **출력** 기능
 
-Spring Batch의 Reader에서 읽어올 수 있는 데이터 유형
-* 입력 데이터에서 읽어오기
-* 파일에서 읽어오기
-* Database에서 읽어오기
-* Java Message Service등 다른 소스에서 읽어오기
-* 본인만의 커스텀한 Reader로 읽어오기
+ItemWriter는 item 하나를 작성하지 않고 **Chunk 단위로 묶인 item List**를 다룸
 
-#### ItemStream 인터페이스
-ItemStream 인터페이스는 **주기적으로 상태를 저장하고 오류가 발생하면 해당 상태에서 복원**하기 위한 마커 인터페이스
-즉, 배치 프로세스의 실행 컨텍스트와 연계해서 **ItemReader의 상태를 저장하고 실패한 곳에서 다시 실행할 수 있게 해주는 역할**을 함
+* ItemReader를 통해 각 항목을 개별적으로 읽고 이를 처리하기 위해 ItemProcessor에 전달  
+* 이 프로세스는 청크의 Item 개수 만큼 처리 될 때까지 계속됨
+* 청크 단위만큼 처리가 완료되면 Writer에 전달되어 Writer에 명시되어있는대로 일괄처리
 
-ItemStream의 3개 메소드 역할
+Reader와 Processor를 거쳐 처리된 Item을 Chunk 단위 만큼 쌓은 뒤 이를 Writer에 전달
 
-* ```open()```, ```close()```는 스트림을 열고 닫음
-* ```update()```를 사용하면 Batch 처리의 상태를 업데이트 할 수 있음
+## Database Writer
+Spring Batch는 JDBC와 ORM 모두 Writer를 제공
+Writer는 Chunk단위의 마지막 단계임
+그래서 Database의 영속성과 관련해서는 **항상 마지막에 Flush를 해줘야만** 함
 
-개발자는 **ItemReader와 ItemStream 인터페이스를 직접 구현해서 원하는 형태의 ItemReader**를 만들 수 있음
+Writer가 받은 모든 Item이 처리 된 후, Spring Batch는 현재 트랜잭션을 커밋
 
-## ItemReader 구현체
-### Database Reader
-2개의 Reader 타입을 지원
-- Cursor: JDBC ResultSet의 기본 기능
-  > Cursor 방식은 Database와 커넥션을 맺은 후, Cursor를 한칸씩 옮기면서 지속적으로 데이터를 빨아옵  
-  - esultSet이 open 될 때마다 ```next()``` 메소드가 호출 되어 Database의 데이터가 반환 됨
-  - 이를 통해 필요에 따라 **Database에서 데이터를 Streaming** 할 수 있음
-- Paging
-  > Paging 방식에서는 한번에 10개 (혹은 개발자가 지정한 PageSize)만큼 데이터를 가져옴
-  - Paging 개념은 페이지라는 Chunk로 Database에서 데이터를 검색
-  - **페이지 단위로 한번에 데이터를 조회**해오는 방식
+데이터베이스와 관련된 Writer
 
-### CursorItemReader
-Streaming 으로 데이터를 처리
-Database와 어플리케이션 사이에 통로를 하나 연결하고 하나씩 빨아들인다고 생각하면 됨
+* JdbcBatchItemWriter
+* HibernateItemWriter
+* JpaItemWriter
 
-#### JdbcCursorItemReader
-Cursor 기반의 JDBC Reader 구현체
+## JdbcBatchItemWriter
+ORM을 사용하지 않는 경우 Writer는 대부분 JdbcBatchItemWriter를 사용
+JdbcBatchItemWriter는 **JDBC의 Batch 기능을 사용하여 한번에 Database로 전달하여 Database 내부에서 쿼리들이 실행**되도록 함
 
-JdbcCursorItemReader의 설정값
+* 업데이트를 일괄 처리로 그룹화하면 데이터베이스와 어플리케이션간 왕복 횟수가 줄어들어 성능이 향상 됨
 
-* chunk
-    * ```<Pay, Pay>``` 에서 **첫번째 Pay는 Reader에서 반환할 타입**이며, **두번째 Pay는 Writer에 파라미터로 넘어올 타입**
-    * ```chunkSize```로 인자값을 넣은 경우는 Reader & Writer가 묶일 Chunk 트랜잭션 범위
-        * Chunk에 대한 자세한 이야기는 [쳅터 6](https://jojoldu.tistory.com/331)을 참고
-* fetchSize
-    * Database에서 한번에 가져올 데이터 양
-    * Paging과는 다른 것이, Paging은 실제 쿼리를 ```limit```, ```offset```을 이용해서 분할 처리하는 반면, Cursor는 쿼리는 분할 처리 없이 실행되나 내부적으로 가져오는 데이터는 FetchSize만큼 가져와 ```read()```를 통해서 하나씩 가져옴
-* dataSource
-    * Database에 접근하기 위해 사용할 Datasource 객체를 할당
-* rowMapper
-    * 쿼리 결과를 Java 인스턴스로 매핑하기 위한 Mapper
-    * 커스텀하게 생성해서 사용할 수 도 있지만, 이렇게 될 경우 매번 Mapper 클래스를 생성해야 되서 보편적으로는 Spring에서 공식적으로 지원하는 ```BeanPropertyRowMapper.class```를 많이 사용
-* sql
-    * Reader로 사용할 쿼리문을 사용
-* name
-    * reader의 이름을 지정
-    * Bean의 이름이 아니며 Spring Batch의 ExecutionContext에서 저장되어질 이름
+JdbcBatchItemWriterBuilder 설정값
 
-#### CursorItemReader의 주의 사항
-Database와 SocketTimeout을 충분히 큰 값으로 설정해야만 함
-**Batch 수행 시간이 오래 걸리는 경우에는 PagingItemReader를 사용**
-Paging의 경우 한 페이지를 읽을때마다 Connection을 맺고 끊기 때문에 아무리 많은 데이터라도 타임아웃과 부하 없이 수행될 수 있음
+|  Property     |  Parameter Type     |  설명   |
+|  ---                          |  ---                              |  ---  |
+| assertUpdates                 | boolean |  적어도 하나의 항목이 행을 업데이트하거나 삭제하지 않을 경우 예외를 throw할지 여부를 설정, 기본값은 ```true```, Exception:```EmptyResultDataAccessException```     | 
+| columnMapped        | 없음 | Key,Value 기반으로 Insert SQL의 Values를 매핑 (ex: ```Map<String, Object>```)      |
+| beanMapped        | 없음  | Pojo 기반으로 Insert SQL의 Values를 매핑      |
 
-### PagingItemReader
-Paging: 여러 쿼리를 실행하여 각 쿼리가 결과의 일부를 가져 오는 방법
+```JdbcBatchItemWriter```의 설정에서 주의
 
-Spring Batch에서는 ```offset```과 ```limit```을 **PageSize에 맞게 자동으로 생성해줌**
-각 페이지마다 새로운 쿼리를 실행하므로 **페이징시 결과를 정렬하는 것이 중요**
-데이터 결과의 순서가 보장될 수 있도록 order by가 권장
+* JdbcBatchItemWriter의 제네릭 타입은 **Reader에서 넘겨주는 값의 타입**
 
-#### JdbcPagingItemReader
-JdbcPagingItemRedaer는 JdbcCursorItemReader와 같은 JdbcTemplate 인터페이스를 이용한 PagingItemReader
+## JpaItemWriter
+ORM을 사용할 수 있는 ```JpaItemWriter```
+Writer에 전달하는 데이터가 Entity 클래스라면 JpaItemWriter를 사용
 
-쿼리는 각 Database의 Paging 전략에 맞춰 구현되어야만 함
-**SqlPagingQueryProviderFactoryBean을 통해 Datasource 설정값을 보고 Provider중 하나를 자동으로 선택**하도록 함
+JpaItemWriter는 JPA를 사용하기 때문에 영속성 관리를 위해 EntityManager를 할당해줘야 함  
 
-* parameterValues
-    * 쿼리에 대한 매개 변수 값의 Map을 지정
-    * ```queryProvider.setWhereClause``` 을 보시면 어떻게 변수를 사용하는지 자세히 알 수 있음
-    * where 절에서 선언된 파라미터 변수명과 parameterValues에서 선언된 파라미터 변수명이 일치해야만 함
+> 일반적으로 ```spring-boot-starter-data-jpa```를 의존성에 등록하면 Entity Manager가 Bean으로 자동생성되어 DI 코드만 추가하면 됨
 
-#### JpaPagingItemReader
-JPA는 Hibernate와 많은 유사점을 가지고 있지만 한가지 다른 것이 있다면 
-Hibernate 에선 Cursor가 지원되지만 **JPA에는 Cursor 기반 Database 접근을 지원하지 않음**
+대신 **필수로 설정해야할 값이 EntityManager뿐**임
 
-**EntityManagerFactory를 지정하는 것 외에** JdbcPagingItemReader와 크게 다른 점은 없음
+JdbcBatchItemWriter와 다른것이 있다면 processor가 추가 됨  
+이유는 Pay Entity를 읽어서 Writer에는 Pay2 Entity를 전달해주기 위함  
 
-#### PagingItemReader 주의 사항
-정렬 (```Order```) 가 무조건 포함되어 있어야 함
+> Reader에서 읽은 데이터를 가공해야할 때 Processor가 필요함  
 
-### ItemReader 주의 사항
-* JpaRepository를 ListItemReader, QueueItemReader에 사용하면 안됨
-    * 간혹 JPA의 조회 쿼리를 쉽게 구현하기 위해 JpaRepository를 이용해서 ```new ListItemReader<>(jpaRepository.findByAge(age))``` 로 Reader를 구현하는 분들을 종종 봄
-    * 이렇게 할 경우 Spring Batch의 장점인 페이징 & Cursor 구현이 없어 대규모 데이터 처리가 불가능함 (물론 Chunk 단위 트랜잭션은 됨)
-    * 만약 정말 JpaRepository를 써야 하신다면 ```RepositoryItemReader```를 사용하시는 것을 추천
-        * [예제 코드](https://stackoverflow.com/a/43986718)
-        * Paging을 기본적으로 지원함
-* Hibernate, JPA 등 영속성 컨텍스트가 필요한 Reader 사용시 fetchSize와 ChunkSize는 같은 값을 유지해야 함
-    * [Spring Batch 영속성 컨텍스트 문제](https://jojoldu.tistory.com/146)
+JpaItemWriter는 JdbcBatchItemWriter와 달리 **넘어온 Entity를 데이터베이스에 반영**함
+JpaItemWriter는 **Entity 클래스를 제네릭 타입으로 받아야만 함**
+
+## Custom ItemWriter
+Reader와 달리 Writer의 경우 Custom하게 구현해야할 일이 많음
+
+* Reader에서 읽어온 데이터를 RestTemplate으로 외부 API로 전달해야할때
+* 임시저장을 하고 비교하기 위해 싱글톤 객체에 값을 넣어야할때
+* 여러 Entity를 동시에 save 해야할때
+
+등등 여러 상황이 있음
+
+Spring Batch에서 공식적으로 지원하지 않는 Writer를 사용하고 싶을때 **ItemWriter인터페이스를 구현**하면 됨
+
+```write()```만 ```@Override``` 하시면 구현체 생성은 끝남
+
+## 주의 사항
+ItemWriter를 사용할 때 **Processor에서 Writer에 List를 전달**하고 싶을때가 있음
+이때 ItemWriter의 제네릭을 List로 선언해서는 문제를 해결할 수 없음
+
+[Writer에 List형 Item을 전달하고 싶을때](https://jojoldu.tistory.com/140)
