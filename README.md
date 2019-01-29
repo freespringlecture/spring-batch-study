@@ -13,8 +13,23 @@
 - Gradle
 
 ### 수업 커리큘럼
-1. Spring Batch 가이드 - 배치 어플리케이션이란?
-    https://jojoldu.tistory.com/325
+1. [Spring Batch 가이드 - 배치 어플리케이션이란?](https://jojoldu.tistory.com/324)
 
-2. Spring Batch 가이드 - Batch Job 실행해보기
-    https://jojoldu.tistory.com/325
+2. [Spring Batch 가이드 - Batch Job 실행해보기](https://jojoldu.tistory.com/325)
+   
+3. [Spring Batch 가이드 - 메타테이블엿보기](https://jojoldu.tistory.com/326)
+
+4. [Spring Batch 가이드 - Spring Batch Job Flow](https://jojoldu.tistory.com/328)
+
+5. [Spring Batch 가이드 - Spring Batch Scope & Job Parameter](https://jojoldu.tistory.com/330)
+
+6. [Spring Batch 가이드 - Chunk 지향 처리](https://jojoldu.tistory.com/331)
+
+7. [Spring Batch 가이드 - ItemReader](https://jojoldu.tistory.com/336)
+
+8. [Spring Batch 가이드 - ItemWriter](https://jojoldu.tistory.com/339)
+
+9. [Spring Batch 가이드 - ItemProcessor](https://jojoldu.tistory.com/347)
+
+### 번외
+- [Spring Batch Paging Reader 사용시 같은 조건의 데이터를 읽고 수정할때 문제](https://jojoldu.tistory.com/337)
