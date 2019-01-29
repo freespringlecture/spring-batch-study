@@ -33,3 +33,21 @@
 
 ### 번외
 - [Spring Batch Paging Reader 사용시 같은 조건의 데이터를 읽고 수정할때 문제](https://jojoldu.tistory.com/337)
+
+
+### Spring Batch 가이드 - 메타테이블엿보기
+- JOB_INSTANCE_ID
+    - BATCH_JOB_INSTANCE 테이블의 PK
+- JOB_NAME
+    - 수행한 Batch Job Name
+
+BATCH_JOB_INSTANCE 테이블은 **Job Parameter**에 따라 생성되는 테이블
+
+
+#### Job Parameter
+> Spring Batch가 실행될때 외부에서 받을 수 있는 파라미터
+
+Spring Batch에서는 해당 날짜 데이터로 조회/가공/입력 등의 작업
+
+같은 Batch Job 이라도 Job Parameter가 다르면 Batch_JOB_INSTANCE에는 기록되며
+**Job Parameter** 가 같다면 기록되지 않음
